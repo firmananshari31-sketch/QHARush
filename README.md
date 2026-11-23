@@ -36,9 +36,7 @@ git push -u origin main
 
 - Ukuran file sekitar 3,5 MB, sehingga pemuatan pertama membutuhkan beberapa detik.
 - Pengaturan suara dan pengaturan lain disimpan di `localStorage` browser.
-- Karakter 3D (Wanita, Mech, Manusia Mesin, Petualang) beranimasi skeletal dari file asli.
-  Hantu dan Robot punya gerakan lengan/kaki prosedural, sedangkan Geee dan Penyihir
-  bergerak dengan goyangan seluruh tubuh.
+- Karakter 3D: Wanita, Mech, Manusia Mesin, Petualang, dan lima hewan Quaternius (Kelinci, Anak Ayam, Ayam, Anjing, Kucing) beranimasi skeletal dari file asli. Hantu dan Robot memakai gerakan lengan/kaki prosedural.
 
 ## Bisa dimainkan offline
 
