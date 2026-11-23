@@ -81,6 +81,7 @@ select,input[type=number]{width:100%;border:3px solid var(--ink);border-radius:1
 .btn.alt{background:var(--alt);color:#fff;box-shadow:0 4px 0 var(--alt-d);font-family:inherit}
 .btn.sm{font-size:14px;padding:9px 14px;border-radius:14px}
 #res h1{font-family:var(--fh)}
+#bLH{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:6;width:min(360px,84vw);font-size:22px;animation:pulse 1.2s ease-in-out infinite}@keyframes pulse{50%{transform:translateX(-50%) scale(1.06)}}
 @media(max-width:560px){.grid2{grid-template-columns:1fr}.hd h1{font-size:30px}.logo{width:56px;height:56px}.btn.big{font-size:21px}}
 
 #setup,#res{isolation:isolate}
@@ -130,12 +131,14 @@ select,input[type=number]{width:100%;border:3px solid var(--ink);border-radius:1
 <section class="sec"><h2>🏆 Hasil</h2>
 <div class="grid2">
 <label>Tampilan hasil<select id="md"><option value="urut">Urutan giliran 1 → terakhir</option><option value="tim">Bagi tim</option></select></label>
+<label>Munculkan hasil<select id="rv"><option value="manual">🔘 Pakai tombol Lihat Hasil</option><option value="auto">⏱ Otomatis setelah perayaan</option></select></label>
 <label>Anggota/tim<input id="ts" type="number" min="2" max="30" value="4"></label>
 </div>
 </section>
 
 <button class="btn big" id="bGo" type="button">MULAI BALAPAN! 🚀</button>
 </div></div>
+<button class="btn big" id="bLH" type="button" style="display:none">🏆 Lihat Hasil</button>
 <div class="pnl" id="res" style="display:none"><div class="card"><h1>🏆 Hasil Balapan</h1>
 <div class="row noprint"><button class="btn alt" id="vU">Urutan</button><button class="btn alt" id="vT">Tim</button></div>
 <div id="list"></div>
@@ -354,6 +357,18 @@ function mkPodium(){
  }
  S.add(PODIUM);
 }
+const BILLW=['QHA RUSH!','⭐ JUARA ⭐','NEON CITY','GAS!! 🚀','SERU BANGET','KOTA NEON'];
+function billTex(word,col){
+ const m=document.createElement('canvas').getContext('2d');m.font='bold 84px sans-serif';
+ const tw=Math.ceil(m.measureText(word+'     ').width);
+ const cv=document.createElement('canvas');cv.width=tw*2;cv.height=160;const x=cv.getContext('2d');
+ x.fillStyle='#120a33';x.fillRect(0,0,cv.width,cv.height);
+ const hex='#'+col.toString(16).padStart(6,'0');
+ x.strokeStyle=hex;x.lineWidth=10;x.strokeRect(5,5,cv.width-10,cv.height-10);
+ x.font='bold 84px sans-serif';x.textBaseline='middle';x.fillStyle=hex;x.shadowColor=hex;x.shadowBlur=24;
+ x.fillText(word,20,82);x.fillText(word,20+tw,82);
+ const t=new THREE.CanvasTexture(cv);t.wrapS=THREE.RepeatWrapping;return t;
+}
 let MAPK='taman';
 const MAPS={
  taman:{},
@@ -375,10 +390,21 @@ function decorMap(add,W,L){
    if(MAPK=='kota'){
     add(mk('b',MM(body),px,h/2,pz,bw,h,bw));
     add(mk('b',GL(pick(neonC)),px,h+.15,pz,bw*.9,.3,bw*.9));
-    for(let r=1,rows=Math.floor(h/1.8);r<rows;r++)for(let c=-1;c<=1;c+=2){
-     const w=mk('b',GL(pick(neonC)),px-sd*(bw/2+.03),1+r*1.6,pz+c*bw*.28,.12,.85,.6);
+    add(mk('b',MM(0x3a3366),px,h+1.1,pz,.12,2.2,.12));
+    const beacon=mk('s',GL(0xff3344),px,h+2.3,pz,.22,.22,.22);add(beacon);ANI.push({g:beacon,t:'blink',v:5,ph:Math.random()*6});
+    for(let r=1,rows=Math.floor(h/1.7);r<rows;r++)for(let c=-1;c<=1;c+=2){
+     const w=mk('b',GL(pick(neonC)),px-sd*(bw/2+.03),1+r*1.5,pz+c*bw*.28,.12,.8,.55);
      add(w);
-     if(Math.random()<.5)ANI.push({g:w,t:'blink',v:1+Math.random()*3,ph:Math.random()*6});
+     if(Math.random()<.75)ANI.push({g:w,t:'blink',v:1.5+Math.random()*4.5,ph:Math.random()*6});
+    }
+    if(Math.random()<.5){
+     const word=pick(BILLW),tex=billTex(word,pick(neonC));
+     const pw=Math.max(2.6,bw*1.25),ph=pw/3.2;
+     const pl=new THREE.Mesh(new THREE.PlaneGeometry(pw,ph),new THREE.MeshBasicMaterial({map:tex,transparent:true}));
+     pl.position.set(px-sd*(bw/2+.09),2.4+Math.random()*Math.max(.5,h-5),pz);
+     pl.rotation.y=-sd*Math.PI/2;
+     add(pl);ANI.push({g:pl,t:'scroll',tex,v:.35+Math.random()*.5});
+     if(Math.random()<.4)ANI.push({g:pl,t:'blink',v:2+Math.random()*2,ph:Math.random()*6});
     }
    }else if(MAPK=='fantasi'){
     add(mk('c',MM(body),px,h/2,pz,bw*.9,h/.8,bw*.9));
@@ -397,6 +423,7 @@ function decorMap(add,W,L){
   }
  }
 }
+$('bLH').onclick=showResults;['bBk','bAg','bM'].forEach(id=>$(id).addEventListener('click',()=>$('bLH').style.display='none'));
 TH.forEach((t,i)=>$('th').add(new Option(t.e+' '+t.n,i)));
 (function(){
  const root=document.documentElement;
@@ -528,7 +555,7 @@ const PT=[],dtex=(()=>{const c=document.createElement('canvas');c.width=c.height
 for(let i=0;i<220;i++){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:dtex,transparent:true,depthWrite:false}));sp.visible=false;S.add(sp);PT.push({s:sp,l:0,mx:1,sz:1,v:0})}
 let pi=0;const puff=(x,y,z,col,sz,vy)=>{const p=PT[pi++%220];p.s.position.set(x+(Math.random()-.5)*.4,y,z);p.s.material.color.set(col);p.l=p.mx=.5+Math.random()*.3;p.sz=sz;p.v=vy;p.s.visible=true};
 const ptUpd=dt=>{for(const p of PT)if(p.l>0){p.l-=dt;if(p.l<=0)p.s.visible=false;else{const a=p.l/p.mx;p.s.material.opacity=a;p.s.scale.setScalar(p.sz*(1.6-a));p.s.position.y+=p.v*dt}}};
-let ANI=[];const aniUpd=(dt,t)=>{for(const a of ANI){if(a.t=='bob')a.g.position.y=a.y0+Math.abs(Math.sin(t*a.v+a.ph))*a.a;else if(a.t=='drift'){a.g.position.x+=a.v*dt;if(a.g.position.x>95)a.g.position.x=-95}else if(a.t=='spin')a.g.rotation.y+=dt*a.v;else if(a.t=='blink')a.g.visible=Math.sin(t*a.v+a.ph)>-.25;else a.g.children.forEach((c,i)=>{if(i)c.visible=((Math.floor(t*7)+i)%3)!=0})}};
+let ANI=[];const aniUpd=(dt,t)=>{for(const a of ANI){if(a.t=='bob')a.g.position.y=a.y0+Math.abs(Math.sin(t*a.v+a.ph))*a.a;else if(a.t=='drift'){a.g.position.x+=a.v*dt;if(a.g.position.x>95)a.g.position.x=-95}else if(a.t=='spin')a.g.rotation.y+=dt*a.v;else if(a.t=='blink')a.g.visible=Math.sin(t*a.v+a.ph)>-.25;else if(a.t=='scroll')a.tex.offset.x-=dt*a.v;else a.g.children.forEach((c,i)=>{if(i)c.visible=((Math.floor(t*7)+i)%3)!=0})}};
 let SPN=[],BLD=[],shk=0,slowT=0,slOn=false,RP=1,PP=200,ZS=1,VH='mix',AE=0,nA=5,PX=[0,-2.6,2.6],PH=[2.4,1.7,1.1],FL=[],IT=1,D=30,sc=1,ds=1,HD=[],ITM=[],world;
 G.v=new THREE.ConeGeometry(.35,.5,3).rotateX(-Math.PI/2);G.a=new THREE.TorusGeometry(.5,.13,8,14,Math.PI*1.15);
 function mkItem(ty){const g=new THREE.Group(),bm=c=>new THREE.MeshBasicMaterial({color:c});
@@ -658,7 +685,8 @@ camLook.lerp(tg,k);{const on=state=='race'&&!!fr&&T<fr.evEnd&&fr.mul>1.2;if(on!=
 if(first){camPos.lerp(fr.g.position.clone().add(new THREE.Vector3(0,2.3+fr.off,0)),k2);const a=yaw+fr.hd,d=new THREE.Vector3(-Math.sin(a)*Math.cos(pit),Math.sin(pit),-Math.cos(a)*Math.cos(pit));C.position.copy(camPos);if(shk>.01){C.position.x+=(Math.random()-.5)*shk*.6;C.position.y+=(Math.random()-.5)*shk*.4}C.lookAt(camPos.clone().add(d.multiplyScalar(20)));return}
 const hd=(all||!fr)?0:fr.hd,cp=Math.cos(pit),a=yaw+hd;camPos.lerp(camLook.clone().add(new THREE.Vector3(Math.sin(a)*cp*dist,Math.sin(pit)*dist+1,Math.cos(a)*cp*dist)),k2);C.position.copy(camPos);if(shk>.01){C.position.x+=(Math.random()-.5)*shk*.6;C.position.y+=(Math.random()-.5)*shk*.4}C.lookAt(camLook)}
 function finish(){if(state!='race')return;if(cnt<runners.length)runners.filter(r=>!r.fin).sort((a,b)=>b.d-a.d).forEach(r=>{r.fin=true;r.rank=++cnt;r.d=L+8;r.ft=T});state='done';mkPodium();runners.forEach(r=>r.g.visible=true);sfx('fanfare');playMusic(7);setCrowd(.4);setTimeout(()=>setCrowd(0),5000);confetti();$('hud').style.display='none';
-setTimeout(()=>{if(state!='done')return;$('res').style.display='flex';view=$('md').value;render()},900)}
+setTimeout(()=>{if(state!='done')return;if($('rv').value=='auto')showResults();else $('bLH').style.display='block'},900)}
+function showResults(){if(state!='done')return;$('bLH').style.display='none';$('res').style.display='flex';view=$('md').value;render()}
 function render(){const ord=runners.slice().sort((a,b)=>a.rank-b.rank),k=Math.max(2,+$('ts').value||4),tc=['#ff3d8b','#2ec4ff','#7a5cff','#ff8a3d','#1fae6b','#d6336c'];let h='';
 if(view=='tim')for(let i=0;i<ord.length;i+=k)h+='<div class="tm" style="background:'+tc[(i/k)%6]+'"><b>Tim '+(i/k+1)+'</b>'+ord.slice(i,i+k).map(r=>'<span>'+r.t.e+' '+esc(r.name)+'</span>').join('')+'</div>';
 else h=ord.map((r,i)=>'<div class="rw"><i>'+(i+1)+'</i>'+r.t.e+' '+esc(r.name)+'</div>').join('');$('list').innerHTML=h}
