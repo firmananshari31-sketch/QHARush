@@ -1,5 +1,5 @@
 // QHA Rush! service worker: caches the game shell so it can be reopened offline.
-const VERSION = 'qha-rush-v2';
+const VERSION = 'qha-rush-v12';
 const SHELL = [
   './', './index.html', './manifest.json', './preview.png',
   './icon-192.png', './icon-512.png', './icon-maskable-512.png',
